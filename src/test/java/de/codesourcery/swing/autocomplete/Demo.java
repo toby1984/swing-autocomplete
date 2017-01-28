@@ -17,12 +17,10 @@ package de.codesourcery.swing.autocomplete;
 
 import java.awt.Component;
 import java.awt.Dimension;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JEditorPane;
@@ -55,70 +53,82 @@ public class Demo
         return new Person(name,email);
     }
 
-    public static void main(String[] args) throws InvocationTargetException, InterruptedException 
+    public static void main(String[] args) throws Exception
     {
-        SwingUtilities.invokeAndWait( () -> 
+        final Runnable r = new Runnable() 
         {
-            // prepare some test data
-            final List<Person> choices = new ArrayList<>();
-            choices.addAll( Arrays.asList( person("John Doe","john.doe@unknown.net") , person("Sarah Doe" , "sarah.doe@unknown.net"),
-                    person("Arthur Dent" , "arthur@guide.com") , person("Lara Croft" , "laracroft@longgone.com" ) ) );
-
-            final AutoCompleteBehaviour<Person> autoComplete = new AutoCompleteBehaviour<Person>();
-
-            // add callback that will generate proposals
-            // and map the user's selection back to what will
-            // be inserted into the JEditorPane
-            autoComplete.setCallback( new IAutoCompleteCallback<Person>() 
+            @Override
+            public void run()
             {
-                @Override
-                public List<Person> getProposals(String input) 
+                // prepare some test data
+                final List<Person> choices = new ArrayList<>();
+                choices.addAll( Arrays.asList( person("John Doe","john.doe@unknown.net") , person("Sarah Doe" , "sarah.doe@unknown.net"),
+                        person("Arthur Dent" , "arthur@guide.com") , person("Lara Croft" , "laracroft@longgone.com" ) ) );
+
+                final AutoCompleteBehaviour<Person> autoComplete = new AutoCompleteBehaviour<Person>();
+
+                // add callback that will generate proposals
+                // and map the user's selection back to what will
+                // be inserted into the JEditorPane
+                autoComplete.setCallback( new IAutoCompleteCallback<Person>() 
                 {
-                    if ( input.length() < 2 ) {
-                        return Collections.emptyList();
+                    @Override
+                    public List<Person> getProposals(String input) 
+                    {
+                        if ( input.length() < 2 ) {
+                            return Collections.emptyList();
+                        }
+                        final String lower = input.toLowerCase();
+
+                        final List<Person>  result = new ArrayList<>();
+                        for ( Person c : choices ) {
+                            if ( c.name.contains( lower ) || c.email.contains(lower)  ) {
+                                result.add( c );
+                            }
+                        }
+                        return result;
                     }
-                    final String lower = input.toLowerCase();
-                    return choices.stream().filter( c -> c.name.contains( lower ) || c.email.contains(lower) ).collect( Collectors.toList() );
-                }
 
-                @Override
-                public String getStringToInsert(Person person) 
+                    @Override
+                    public String getStringToInsert(Person person) 
+                    {
+                        return person.email;
+                    }
+                }); 
+
+                // set a custom renderer for our proposals
+                final DefaultListCellRenderer renderer = new DefaultListCellRenderer() 
                 {
-                    return person.email;
-                }
-            }); 
-            
-            // set a custom renderer for our proposals
-            final DefaultListCellRenderer renderer = new DefaultListCellRenderer() 
-            {
-                public Component getListCellRendererComponent( JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus)
-                {
-                    final Component result = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                    final Person p = (Person) value;
-                    setText( p.name+" <"+p.email+">" );
-                    return result;
-                }
-            };
-            autoComplete.setListCellRenderer( renderer );
-            
-            // setup initial size
-            autoComplete.setInitialPopupSize( new Dimension(100,300) );
-            
-            // how many proposals to display before showing a scroll bar
-            autoComplete.setVisibleRowCount( 3 );
+                    public Component getListCellRendererComponent( JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus)
+                    {
+                        final Component result = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                        final Person p = (Person) value;
+                        setText( p.name+" <"+p.email+">" );
+                        return result;
+                    }
+                };
+                autoComplete.setListCellRenderer( renderer );
 
-            final JEditorPane editor = new JEditorPane();
-            editor.setSize( new Dimension(640,480 ) );
+                // setup initial size
+                autoComplete.setInitialPopupSize( new Dimension(100,300) );
 
-            // attach behaviour to editor
-            autoComplete.attachTo( editor );
+                // how many proposals to display before showing a scroll bar
+                autoComplete.setVisibleRowCount( 3 );
 
-            final JFrame frame = new JFrame("demo");
-            frame.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
-            frame.getContentPane().add( new JScrollPane( editor) );
-            frame.pack();
-            frame.setLocationRelativeTo( null );
-            frame.setVisible( true );            
-        } );
+                final JEditorPane editor = new JEditorPane();
+                editor.setSize( new Dimension(640,480 ) );
+
+                // attach behaviour to editor
+                autoComplete.attachTo( editor );
+
+                final JFrame frame = new JFrame("demo");
+                frame.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
+                frame.getContentPane().add( new JScrollPane( editor) );
+                frame.pack();
+                frame.setLocationRelativeTo( null );
+                frame.setVisible( true );            
+            }
+        };
+        SwingUtilities.invokeAndWait( r );
     }
 }
