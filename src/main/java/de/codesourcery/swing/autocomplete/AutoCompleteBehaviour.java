@@ -27,6 +27,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.time.chrono.IsoChronology;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -102,21 +103,23 @@ public class AutoCompleteBehaviour<T>
         @Override
         public InitialUserInput getInitialUserInput(JTextComponent editor, int caretPosition) 
         {
-            int start = caretPosition-1;
-            
             final String text = editor.getText();
             final StringBuilder buffer = new StringBuilder();
-            while ( start >= 0 && ! Character.isWhitespace( text.charAt( start ) ) ) 
+            
+            int start = caretPosition;
+            while ( (start-1) >= 0 && ! Character.isWhitespace( text.charAt( start-1 ) ) ) 
             {
-                buffer.insert(0 , text.charAt( start ) );
-                start -= 1;
+                buffer.insert(0 , text.charAt( start-1) );
+                start--;
             }
+                
             int end = editor.getCaretPosition();
-            while ( end < text.length() && ! Character.isWhitespace( text.charAt( end ) ) ) 
+            while(  (end+1) < text.length() && ! Character.isWhitespace( text.charAt( end+1 ) ) ) 
             {
-                buffer.append( text.charAt( end ) );
-                end++;
+                buffer.append( text.charAt( end+1 ) );
+                end++;                
             }
+            
             return new InitialUserInput( start , buffer.toString() );
         }
     }
@@ -370,8 +373,8 @@ public class AutoCompleteBehaviour<T>
                 try 
                 {
                     final InitialUserInput p = callback.getInitialUserInput( editor , editor.getCaretPosition() );
-                    final Rectangle rect = editor.modelToView( p.caretPosition+1 );           
-                    showPopup( rect , e.getWhen() , p.userInput , p.caretPosition+1 );
+                    final Rectangle rect = editor.modelToView( p.caretPosition );           
+                    showPopup( rect , e.getWhen() , p.userInput , p.caretPosition );
                 } 
                 catch (BadLocationException e1) 
                 {
@@ -493,6 +496,7 @@ public class AutoCompleteBehaviour<T>
                 {
                     final Document doc = editor.getDocument();
                     try {
+                        System.out.println("Remove: "+buffer.autoCompleteCaretStartPosition+" , len="+buffer.length());
                         doc.remove( buffer.autoCompleteCaretStartPosition , buffer.length() );
                         doc.insertString(buffer.autoCompleteCaretStartPosition,userChoice,null);
                     }
