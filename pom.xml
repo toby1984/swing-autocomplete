@@ -3,7 +3,7 @@
   <groupId>de.codesourcery.swing.autocomplete</groupId>
   <artifactId>swing-autocomplete</artifactId>
   <packaging>jar</packaging>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
   <name>swing-autocomplete</name>
   <description>Adds support for auto-completion to Swing javax.swing.text.JTextComponent input fields</description>
   <licenses>

@@ -28,8 +28,10 @@ import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
+import javax.swing.text.JTextComponent;
 
 import de.codesourcery.swing.autocomplete.AutoCompleteBehaviour.DefaultAutoCompleteCallback;
+import de.codesourcery.swing.autocomplete.AutoCompleteBehaviour.InitialUserInput;
 
 /**
  * Tiny demo showing how to use the {@link AutoCompleteBehaviour}.
@@ -62,7 +64,9 @@ public class Demo
             {
                 // prepare some test data
                 final List<Person> choices = new ArrayList<>();
-                choices.addAll( Arrays.asList( person("John Doe","john.doe@unknown.net") , person("Sarah Doe" , "sarah.doe@unknown.net"),
+                choices.addAll( Arrays.asList( 
+                        person("Joe Black","john.black@megacorp.com"),
+                        person("John Doe","john.doe@unknown.net") , person("Sarah Doe" , "sarah.doe@unknown.net"),
                         person("Arthur Dent" , "arthur@guide.com") , person("Lara Croft" , "laracroft@longgone.com" ) ) );
 
                 final AutoCompleteBehaviour<Person> autoComplete = new AutoCompleteBehaviour<Person>();

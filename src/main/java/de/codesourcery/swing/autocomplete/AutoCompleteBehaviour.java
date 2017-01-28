@@ -27,7 +27,6 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.time.chrono.IsoChronology;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -114,9 +113,9 @@ public class AutoCompleteBehaviour<T>
             }
                 
             int end = editor.getCaretPosition();
-            while(  (end+1) < text.length() && ! Character.isWhitespace( text.charAt( end+1 ) ) ) 
+            while(  end < text.length() && ! Character.isWhitespace( text.charAt( end ) ) ) 
             {
-                buffer.append( text.charAt( end+1 ) );
+                buffer.append( text.charAt( end ) );
                 end++;                
             }
             
@@ -496,7 +495,6 @@ public class AutoCompleteBehaviour<T>
                 {
                     final Document doc = editor.getDocument();
                     try {
-                        System.out.println("Remove: "+buffer.autoCompleteCaretStartPosition+" , len="+buffer.length());
                         doc.remove( buffer.autoCompleteCaretStartPosition , buffer.length() );
                         doc.insertString(buffer.autoCompleteCaretStartPosition,userChoice,null);
                     }
