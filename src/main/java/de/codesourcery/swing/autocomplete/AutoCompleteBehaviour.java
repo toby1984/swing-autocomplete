@@ -396,11 +396,11 @@ public class AutoCompleteBehaviour<T>
         @Override
         public void insertUpdate(DocumentEvent e) 
         {
-            final int len = e.getLength();
-            final int offset = e.getOffset();
-            final String text = editor.getText().substring( offset , offset+len );            
             if ( autoCompleteActive ) 
             {
+                final int len = e.getLength();
+                final int offset = e.getOffset();
+                final String text = editor.getText().substring( offset , offset+len );                    
                 buffer.insert( text , offset );
             }
         }
