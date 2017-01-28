@@ -22,8 +22,6 @@ import java.awt.KeyboardFocusManager;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Window;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -38,8 +36,13 @@ import javax.swing.AbstractListModel;
 import javax.swing.FocusManager;
 import javax.swing.JList;
 import javax.swing.JScrollPane;
+import javax.swing.JViewport;
 import javax.swing.ListCellRenderer;
 import javax.swing.SwingUtilities;
+import javax.swing.event.CaretEvent;
+import javax.swing.event.CaretListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
@@ -176,7 +179,32 @@ public class AutoCompleteBehaviour<T>
     
     private final MyListModel listModel = new MyListModel();
 
-    private PropertyChangeListener focusListener = new PropertyChangeListener() {
+    private final ChangeListener viewportListener = new ChangeListener() 
+    {
+
+        @Override
+        public void stateChanged(ChangeEvent e) {
+            if ( autoCompleteActive ) {
+                hidePopup( null );
+            }
+        }
+    };
+    
+    private final CaretListener caretListener = new CaretListener() {
+        
+        @Override
+        public void caretUpdate(CaretEvent e) 
+        {
+            if ( autoCompleteActive ) 
+            {
+                if ( ! buffer.isValidOffset( e.getDot() ) ) {
+                    hidePopup( null );
+                }
+            }
+        }
+    }; 
+    
+    private final PropertyChangeListener focusListener = new PropertyChangeListener() {
         
         @Override
         public void propertyChange(PropertyChangeEvent ev) 
@@ -351,7 +379,7 @@ public class AutoCompleteBehaviour<T>
             }
         }
         
-        private boolean isValidOffset(int offset) 
+        public boolean isValidOffset(int offset) 
         {
             return offset >= autoCompleteCaretStartPosition && offset <= ( autoCompleteCaretStartPosition+buffer.length() );
         }
@@ -544,15 +572,21 @@ public class AutoCompleteBehaviour<T>
         }
         this.editor = editor;
         
+        if ( editor.getParent() instanceof JViewport) {
+            ((JViewport) editor.getParent()).addChangeListener( viewportListener);
+        }
+        
         final FocusManager focusManager = FocusManager.getCurrentManager();
         focusManager.addPropertyChangeListener( focusListener );
         
         editor.getDocument().addDocumentListener( documentListener );
         editor.addKeyListener( keyListener );
+        
+        editor.addCaretListener( caretListener);
 
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher( keyInterceptor );
     }
-
+    
     /**
      * Detaches this behaviour from its current editor.
      * 
@@ -571,8 +605,14 @@ public class AutoCompleteBehaviour<T>
         if ( isAttached() ) 
         {
             hidePopup( null );
+            
+            if ( editor.getParent() instanceof JViewport) {
+                ((JViewport) editor.getParent()).removeChangeListener( viewportListener);
+            }
+            
             editor.getDocument().removeDocumentListener( documentListener );
             editor.removeKeyListener( keyListener );
+            editor.removeCaretListener( caretListener );
             
             final FocusManager focusManager = FocusManager.getCurrentManager();
             focusManager.removePropertyChangeListener( focusListener );
