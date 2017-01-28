@@ -17,4 +17,4 @@ Adds auto-complete behaviour to any Java Swing JTextComponent (JEditorPane,JText
 
 A demo application can be found inside src/test
 
-!(screenshot)[https://github.com/toby1984/swing-autocomplete/blob/master/screenshot.png?raw=true]
+![screenshot](https://github.com/toby1984/swing-autocomplete/blob/master/screenshot.png?raw=true)
