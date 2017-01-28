@@ -255,11 +255,6 @@ public class AutoCompleteBehaviour<T>
                     }
                 }                    
             }
-            if ( ! eventHandled ) 
-            {
-                System.out.flush();
-                System.out.println("["+autoCompleteActive+"] Key event: "+e);                
-            }
             return eventHandled;
         }
     };
@@ -297,21 +292,29 @@ public class AutoCompleteBehaviour<T>
 
         public void insert(String s,int editorCaretPosition) 
         {
-            buffer.insert( localOffset(editorCaretPosition) , s );
-            updateProposals();            
+            if ( isValidOffset( editorCaretPosition ) ) {
+                buffer.insert( localOffset(editorCaretPosition) , s );
+                updateProposals();
+            } else {
+                hidePopup( null );
+            }
+        }
+        
+        private boolean isValidOffset(int offset) 
+        {
+            return offset >= autoCompleteCaretStartPosition && offset <= ( autoCompleteCaretStartPosition+buffer.length() );
         }
 
         public void remove(int len,int offset) 
         {
-            if (offset < autoCompleteCaretStartPosition ) {
+            if ( isValidOffset( offset) ) {
+                final int start = localOffset(offset);
+                final int end = start + len;
+                buffer.delete( start , end ); 
+                updateProposals();
+            } else {
                 hidePopup( null );
-                return;
             }
-
-            final int start = localOffset(offset);
-            final int end = start + len;
-            buffer.delete( start , end ); 
-            updateProposals();
         }
 
         public int length() {
@@ -414,11 +417,7 @@ public class AutoCompleteBehaviour<T>
                 throw new IllegalStateException("Editor has not been added to a container ?");
             }
             
-            popup = new Window( parentContainer );
-
-            popup.setFocusable( false );
-            popup.setAutoRequestFocus(false);
-            popup.setSize( initialPopupSize );
+            popup = createPopupWindow( parentContainer );
 
             if ( listCellRenderer != null ) 
             {
@@ -453,6 +452,16 @@ public class AutoCompleteBehaviour<T>
 
             setProposals( choices );
         }
+    }
+    
+    protected Window createPopupWindow(Window parentContainer) 
+    {
+        Window popup = new Window( parentContainer );
+
+        popup.setFocusable( false );
+        popup.setAutoRequestFocus(false);
+        popup.setSize( initialPopupSize );
+        return popup;
     }
 
     protected void hidePopup(T selection) 
@@ -561,7 +570,6 @@ public class AutoCompleteBehaviour<T>
 
     protected List<T> createProposals() 
     {
-        System.out.println("Auto-complete: >"+buffer.getValue()+"<");        
         return callback.getProposals( buffer.getValue() );
     }
 
