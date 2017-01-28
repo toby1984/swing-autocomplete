@@ -29,7 +29,7 @@ import javax.swing.JList;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 
-import de.codesourcery.swing.autocomplete.AutoCompleteBehaviour.IAutoCompleteCallback;
+import de.codesourcery.swing.autocomplete.AutoCompleteBehaviour.DefaultAutoCompleteCallback;
 
 /**
  * Tiny demo showing how to use the {@link AutoCompleteBehaviour}.
@@ -70,7 +70,7 @@ public class Demo
                 // add callback that will generate proposals
                 // and map the user's selection back to what will
                 // be inserted into the JEditorPane
-                autoComplete.setCallback( new IAutoCompleteCallback<Person>() 
+                autoComplete.setCallback( new DefaultAutoCompleteCallback<Person>() 
                 {
                     @Override
                     public List<Person> getProposals(String input) 

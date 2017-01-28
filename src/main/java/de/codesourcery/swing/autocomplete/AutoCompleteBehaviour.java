@@ -85,9 +85,43 @@ public class AutoCompleteBehaviour<T>
          * @return the string
          */
         public String getStringToInsert(X value);
+        
+        /**
+         * Get user input for initial proposal.
+         * 
+         * @param component text component
+         * @param caretPosition caret position where the auto-complete proposal has been triggered
+         * @return user input to use for fetching the initial set of proposals or <code>NULL</code> if no
+         * proposals are available
+         */
+        public InitialUserInput getInitialUserInput(JTextComponent component,int caretPosition);
     }
     
-    protected static final class InitialUserInput 
+    public static abstract class DefaultAutoCompleteCallback<T> implements IAutoCompleteCallback<T> 
+    {
+        @Override
+        public InitialUserInput getInitialUserInput(JTextComponent editor, int caretPosition) 
+        {
+            int start = caretPosition-1;
+            
+            final String text = editor.getText();
+            final StringBuilder buffer = new StringBuilder();
+            while ( start >= 0 && ! Character.isWhitespace( text.charAt( start ) ) ) 
+            {
+                buffer.insert(0 , text.charAt( start ) );
+                start -= 1;
+            }
+            int end = editor.getCaretPosition();
+            while ( end < text.length() && ! Character.isWhitespace( text.charAt( end ) ) ) 
+            {
+                buffer.append( text.charAt( end ) );
+                end++;
+            }
+            return new InitialUserInput( start , buffer.toString() );
+        }
+    }
+    
+    public static final class InitialUserInput 
     {
         public final int caretPosition;
         public final String userInput;
@@ -259,7 +293,7 @@ public class AutoCompleteBehaviour<T>
         }
     };
 
-    private IAutoCompleteCallback<T> callback = new IAutoCompleteCallback<T>() {
+    private IAutoCompleteCallback<T> callback = new DefaultAutoCompleteCallback<T>() {
 
         @Override
         public List<T> getProposals(String input) {
@@ -335,7 +369,7 @@ public class AutoCompleteBehaviour<T>
             {
                 try 
                 {
-                    final InitialUserInput p = getInitialUserInput();
+                    final InitialUserInput p = callback.getInitialUserInput( editor , editor.getCaretPosition() );
                     final Rectangle rect = editor.modelToView( p.caretPosition+1 );           
                     showPopup( rect , e.getWhen() , p.userInput , p.caretPosition+1 );
                 } 
@@ -346,26 +380,6 @@ public class AutoCompleteBehaviour<T>
             }
         };
     };
-    
-    protected InitialUserInput getInitialUserInput() 
-    {
-        int start = editor.getCaretPosition()-1;
-        
-        final String text = editor.getText();
-        final StringBuilder buffer = new StringBuilder();
-        while ( start >= 0 && ! Character.isWhitespace( text.charAt( start ) ) ) 
-        {
-            buffer.insert(0 , text.charAt( start ) );
-            start -= 1;
-        }
-        int end = editor.getCaretPosition();
-        while ( end < text.length() && ! Character.isWhitespace( text.charAt( end ) ) ) 
-        {
-            buffer.append( text.charAt( end ) );
-            end++;
-        }
-        return new InitialUserInput( start , buffer.toString() );
-    }
     
     private DocumentListener documentListener = new DocumentListener() 
     {
