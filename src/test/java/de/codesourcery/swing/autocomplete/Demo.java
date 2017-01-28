@@ -28,10 +28,8 @@ import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
-import javax.swing.text.JTextComponent;
 
 import de.codesourcery.swing.autocomplete.AutoCompleteBehaviour.DefaultAutoCompleteCallback;
-import de.codesourcery.swing.autocomplete.AutoCompleteBehaviour.InitialUserInput;
 
 /**
  * Tiny demo showing how to use the {@link AutoCompleteBehaviour}.

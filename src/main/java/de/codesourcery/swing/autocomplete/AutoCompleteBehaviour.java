@@ -15,6 +15,7 @@
  */
 package de.codesourcery.swing.autocomplete;
 
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.KeyEventDispatcher;
 import java.awt.KeyboardFocusManager;
@@ -27,11 +28,14 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import javax.swing.AbstractListModel;
+import javax.swing.FocusManager;
 import javax.swing.JList;
 import javax.swing.JScrollPane;
 import javax.swing.ListCellRenderer;
@@ -170,16 +174,27 @@ public class AutoCompleteBehaviour<T>
 
     private final MyKeyDispatcher keyInterceptor = new MyKeyDispatcher();
     
-    // listener to close popup when the editor loses focus
-    private FocusListener focusListener = new FocusAdapter() 
-    {
-        public void focusLost(java.awt.event.FocusEvent e) {
-            hidePopup( null );
+    private final MyListModel listModel = new MyListModel();
+
+    private PropertyChangeListener focusListener = new PropertyChangeListener() {
+        
+        @Override
+        public void propertyChange(PropertyChangeEvent ev) 
+        {
+            if ( autoCompleteActive ) 
+            {
+                final Object newValue = ev.getNewValue();
+                if ( newValue instanceof Component && "focusOwner".equals( ev.getPropertyName() ) ) 
+                {
+                    if ( ! (isChildOf( editor , (Component) newValue ) || isChildOf( popup , (Component) newValue ) ) ) 
+                    {
+                        hidePopup( null );
+                    }
+                }
+            }
         }
     };
     
-    private final MyListModel listModel = new MyListModel();
-
     protected final class MyListModel extends AbstractListModel<T> 
     {
 
@@ -505,7 +520,7 @@ public class AutoCompleteBehaviour<T>
             }
         }
     }
-
+    
     /**
      * Enable auto-complete on a {@link JTextComponent}.
      * 
@@ -520,8 +535,8 @@ public class AutoCompleteBehaviour<T>
      */
     public void attachTo(JTextComponent editor) 
     {
-        if ( ! SwingUtilities.isEventDispatchThread() ) { 
-            // required because KeyboardFocusManager.getCurrentKeyboardFocusManager() returns a thread-local
+        if ( ! SwingUtilities.isEventDispatchThread() ) {
+            // required because FocusManager.getCurrentManager() returns a thread-local            
             throw new IllegalStateException("This method must be called from the EDT");
         }
         if ( isAttached() ) {
@@ -529,7 +544,9 @@ public class AutoCompleteBehaviour<T>
         }
         this.editor = editor;
         
-        editor.addFocusListener( focusListener );
+        final FocusManager focusManager = FocusManager.getCurrentManager();
+        focusManager.addPropertyChangeListener( focusListener );
+        
         editor.getDocument().addDocumentListener( documentListener );
         editor.addKeyListener( keyListener );
 
@@ -546,12 +563,20 @@ public class AutoCompleteBehaviour<T>
      */
     public void detach() 
     {
+        if ( ! SwingUtilities.isEventDispatchThread() ) { 
+            // required because FocusManager.getCurrentManager() returns a thread-local
+            throw new IllegalStateException("This method must be called from the EDT");
+        }
+        
         if ( isAttached() ) 
         {
             hidePopup( null );
             editor.getDocument().removeDocumentListener( documentListener );
             editor.removeKeyListener( keyListener );
-            editor.removeFocusListener( focusListener );
+            
+            final FocusManager focusManager = FocusManager.getCurrentManager();
+            focusManager.removePropertyChangeListener( focusListener );
+            
             KeyboardFocusManager.getCurrentKeyboardFocusManager().removeKeyEventDispatcher( keyInterceptor );
             this.editor = null;
         }
@@ -679,4 +704,13 @@ public class AutoCompleteBehaviour<T>
         return e.getWhen() - activationTimestamp;
     }
     
+    private static boolean isChildOf(Component parent,Component potentialChild) 
+    {
+        Component current = potentialChild;
+        while ( current != null && current != parent ) 
+        {
+            current = current.getParent();
+        }
+        return current == parent;
+    }
 }
