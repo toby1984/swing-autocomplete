@@ -113,20 +113,25 @@ public class AutoCompleteBehaviour<T>
             final StringBuilder buffer = new StringBuilder();
             
             int start = caretPosition;
-            while ( (start-1) >= 0 && ! Character.isWhitespace( text.charAt( start-1 ) ) ) 
+            while ( (start-1) >= 0 && ! isSeparatorChar( text.charAt( start-1 ) ) ) 
             {
                 buffer.insert(0 , text.charAt( start-1) );
                 start--;
             }
                 
             int end = editor.getCaretPosition();
-            while(  end < text.length() && ! Character.isWhitespace( text.charAt( end ) ) ) 
+            while(  end < text.length() && ! isSeparatorChar( text.charAt( end ) ) ) 
             {
                 buffer.append( text.charAt( end ) );
                 end++;                
             }
             
             return new InitialUserInput( start , buffer.toString() );
+        }
+        
+        protected boolean isSeparatorChar(char c ) 
+        {
+            return Character.isWhitespace( c );
         }
     }
     
