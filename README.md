@@ -23,7 +23,7 @@ A demo application can be found inside src/test
 <dependency>
   <groupId>de.codesourcery.swing.autocomplete</groupId>
   <artifactId>swing-autocomplete</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
 </dependency>
 ```
 
