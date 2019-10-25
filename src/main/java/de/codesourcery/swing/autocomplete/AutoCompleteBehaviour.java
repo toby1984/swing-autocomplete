@@ -271,10 +271,10 @@ public class AutoCompleteBehaviour<T>
 
                 switch ( e.getKeyChar() ) 
                 {
-                    case ' ':
-                    case 0x10:
-                    case 0x0a:
-                    case 0x1b: // ESC
+                    case KeyEvent.VK_SPACE:
+                    case KeyEvent.VK_SHIFT:
+                    case 0x0a: // LF ?
+                    case KeyEvent.VK_ESCAPE:
                         e.consume();
                         eventHandled = true;                            
                         break;
